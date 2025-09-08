@@ -1,4 +1,7 @@
 requests
-redis>=4.2.0
+redis==4.1.0
 python-dotenv
-redisvl
+# redisvl is incompatible with the lab's RediSearch v2
+# We will use the base redis-py client instead.
+sentence-transformers
+numpy
