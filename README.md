@@ -109,6 +109,15 @@ Cary Johnson, admin, cary.johnson@example.com
 - Notes:
   - The environment exposes only the `Admin` role via `/v1/roles`. Our client resolves role names to `role_uids` and, when a requested role is unavailable, substitutes the available role UID with structured logging for auditability.
 
+##### Teardown Proof
+
+```text
+--- Running Teardown ---
+... deleting users (UIDs: 2, 3, 4) ...
+... delete_database_success (UID: 5) ...
+Teardown complete.
+```
+
 ### Overarching Principles of Excellence
 
 Beyond meeting the base requirements, our solution demonstrates a higher level of strategic thinking and professional discipline.
