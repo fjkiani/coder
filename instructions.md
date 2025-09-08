@@ -1,74 +1,78 @@
-Redis Professional Services Consultant Technical Challenge
-Hi Fahad J. Kiani,
+## How to Run and Validate the Technical Challenge (Customer Instructions)
 
-Thank you for taking the time to complete this technical challenge!
+### Environment and Repository
+- IDE terminal: [Open IDE terminal](https://code-dot-rl-s-tc-fjk.labs.ps-redis.com/?folder=/home/coder)
+- Repository: [https://github.com/fjkiani/coder](https://github.com/fjkiani/coder)
 
-Introduction
-Objective: Demonstrate the building and synchronizing of Redis databases, and showcase your programming skills through the exercises below.
+### One-time setup (in the IDE terminal)
+```bash
+cd /home/coder
+if [ -d coder ]; then cd coder && git fetch origin && git reset --hard origin/main; else git clone https://github.com/fjkiani/coder.git coder && cd coder; fi
+python3 -m pip install --user -r requirements.txt
+```
 
+### Exercise 1: Replication fundamentals
+1) Configure endpoints (no password, non-TLS):
+```bash
+sed -i.bak '/^SOURCE_DB_HOST=/d;/^SOURCE_DB_PORT=/d;/^REPLICA_DB_HOST=/d;/^REPLICA_DB_PORT=/d;/^USE_SSL=/d' .env
+echo "SOURCE_DB_HOST=172.16.22.21" >> .env
+echo "SOURCE_DB_PORT=17159" >> .env
+echo "REPLICA_DB_HOST=172.16.22.23" >> .env
+echo "REPLICA_DB_PORT=13047" >> .env
+echo "USE_SSL=false" >> .env
+```
+2) Run and validate:
+```bash
+python3 src/exercise_1.py
+```
+Expected: prints values 100→1 from replica and shows “Replica reports source at: 172.16.22.21:17159”.
 
-Exercise 1: Building and Synchronizing Redis Databases
+### Exercise 2: REST API automation (DB and users)
+1) Configure API (self‑signed TLS handled):
+```bash
+sed -i.bak '/^RE_HOST=/d;/^RE_PORT=/d;/^RE_API_USER=/d;/^RE_API_PASSWORD=/d;/^RE_DB_PASSWORD=/d;/^VERIFY_TLS=/d' .env
+echo "RE_HOST=re-cluster1.ps-redislabs.org" >> .env
+echo "RE_PORT=9443" >> .env
+echo "RE_API_USER=admin@rl.org" >> .env
+echo "RE_API_PASSWORD=n3Y2Cg9" >> .env
+echo "RE_DB_PASSWORD=ZetaRealmRules2025!" >> .env
+echo "VERIFY_TLS=false" >> .env
+```
+2) Run setup (idempotent):
+```bash
+python3 src/exercise_2.py setup
+```
+3) Run teardown:
+```bash
+python3 src/exercise_2.py teardown
+```
+Expected: setup reports DB ID and creates 3 users; teardown deletes users then the DB. If the environment exposes only the Admin role via `/v1/roles`, the client substitutes the available role UID with structured logs.
 
-Create a single-sharded Redis Enterprise database named source-db with no password, and a memory limit of 2GB. You can learn how to create Redis Enterprise databases here
-Enable "Replica Of" by creating another single-sharded Redis Enterprise database named replica-db with no password and a memory limit of 2GB. Use source-db as the source database
-On the load node, populate some data into source-db using memtier-benchmark. Put the contents of the command you ran in a file named /tmp/memtier_benchmark.txt on the load server
-Write a small script/program using a language of your choice (e.g. Java, Python, Ruby, Go, Scala, C#, or JavaScript) to complete the following:
-Insert the values 1-100 into the Redis database on source-db.
-Read and print them in reverse order from replica-db.
-In your documentation, discuss alternate Redis structures you can use to solve the problem and why you chose the solution you did
+### Bonus: Semantic Router (Vector Search)
+1) Configure bonus DB (non‑TLS):
+```bash
+sed -i.bak '/^BONUS_DB_HOST=/d;/^BONUS_DB_PORT=/d;/^USE_SSL=/d' .env
+echo "BONUS_DB_HOST=172.16.22.22" >> .env
+echo "BONUS_DB_PORT=13867" >> .env
+echo "USE_SSL=false" >> .env
+```
+2) Run examples:
+```bash
+python3 src/bonus_challenge.py "How do I use vector databases for RAG?"
+python3 src/bonus_challenge.py "What are the core themes of Dune?"
+```
+Expected routes: “GenAI programming topics” and “Science fiction entertainment”. Implementation uses low‑level RediSearch FT commands; an offline embedding fallback is included if the model cannot be fetched.
 
-Exercise 2: Working with Redis REST API
+### Troubleshooting (common)
+- DNS issues: swap hostnames for IPs from the DB UI.
+- Self‑signed TLS on API: set `VERIFY_TLS=false` (or provide `CUSTOM_CA_BUNDLE_PATH`).
+- Non‑TLS DBs: set `USE_SSL=false`.
+- RediSearch “unknown command”: create the DB with “Search and Query” enabled.
+- Roles: if only Admin is present, role substitution is logged and applied automatically.
 
-REST API documentation for Redis can be found at here
-REST API Endpoint is https://re-cluster1.ps-redislabs.org:9443. Please use the IP address if the host name isn't working.
-Write a small script/program using a language of your choice (e.g. Java, Python, Ruby, Go, Scala, C#, or JavaScript) to complete the following:
-Create a New Database: Utilize the Database API to create a new database without using any modules.
-Create Three New Users: Utilize the Users API to add three new users to the system with the following details:
-a. Email: john.doe@example.com, Name: John Doe, Role: db_viewer
-b. Email: mike.smith@example.com, Name: Mike Smith, Role: db_member
-c. Email: cary.johnson@example.com, Name: Cary Johnson, Role: admin
-List and Display Users: Utilize the Users API to fetch and display all users in the specified format (name, role, and email).
-Delete the Created Database: Database API to delete the previously created database.
+### Artifacts and Observability
+- memtier command saved on the load node: `/tmp/memtier_benchmark.txt`
+- Structured JSON logs across scripts for reliable validation
+- README contains latest validation outputs and security/TLS handling notes
 
-
-Bonus Challenge: Working with Semantic Routers
-
-Write an app in the language of your choice to do semantic routing (details below).
-If you choose Python, you'll find much of the groundwork done for you in RedisVL. Follow the instructions in README.md to add RedisVL to your Python environment if that was your choice. Additional guidance is also found there.
-In the provided cluster, create a single shard, single region db with Search and query enabled and any other features that you need. Use this new DB in your code. (For simplicity, you can allow unauthenticated data access as in the previous challenges.)
-In your code, define three routes:
-GenAI programming topics
-Science fiction entertainment
-Classical music
-Write reasonable references and settings for each
-The code must send requests to the best route
-For this challenge, the route’s output only needs to show the name of the route
-
-A little bit about this environment
-
-
-There are 3 Redis Enterprise nodes with a cluster already configured between them: re-n1, re-n2, re-n3
-You can access the Secure UI here
-The credentials are admin@rl.org / n3Y2Cg9
-
-There is a memtier_benchmark node you can use to load data. Access is described below
-
-There is a bastion server that can be accessed here
-To login, use the credentials term/n3Y2Cg9
-Once logged in, su as root user (i.e. su)
-Then su as labuser (i.e. su labuser)
-SSH to either the RE nodes or the memtier_benchmark node
-Redis Enteprise Nodes: ssh re-n1 (or re-n2, re-n3)
-memtier_benchmark node: ssh load
-You can now do rladmin, redis-cli, memtier_benchmark etc.
-Note: You can sudo su on the Redis Enterprise nodes to enter root and terminate processes
-
-You can access an VS Code IDE here. Password is n3Y2Cg9
-If you prefer, you can use your own IDE and push to git
-The IDE has git installed so you can clone and pull/save your code
-
-You can use Redis Insight to browse the data in Redis. IGNORE THE UPDATE PROMPTS
-You can get the database endpoint name from the Secure UI database configuration page. Please use the IP address if the host name isn't working.
-
-Good luck! We are excited to see your innovative solution!
 
