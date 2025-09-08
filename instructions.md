@@ -29,6 +29,8 @@ b. Email: mike.smith@example.com, Name: Mike Smith, Role: db_member
 c. Email: cary.johnson@example.com, Name: Cary Johnson, Role: admin
 List and Display Users: Utilize the Users API to fetch and display all users in the specified format (name, role, and email).
 Delete the Created Database: Database API to delete the previously created database.
+
+
 Bonus Challenge: Working with Semantic Routers
 
 Write an app in the language of your choice to do semantic routing (details below).
