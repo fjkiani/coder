@@ -1,18 +1,15 @@
 # Redis Professional Services Consultant Technical Challenge: Solution Overview
 
-This document serves as the strategic overview and evidence deck for our solution to the Redis Technical Challenge. Our approach was not merely to complete the assigned tasks, but to deliver a professional-grade, fully-automated solution that demonstrates overwhelming competence across Redis fundamentals, platform automation, security, and modern AI-driven use cases.
+This document describes how to run and validate the technical challenge and summarizes the implementation.
 
-## Narrative-First Framing: Winning the Engagement
+## Overview
 
-We framed the challenge as a multi-faceted test of consultant-level skills:
 
 1.  **Exercise 1 (The Core Competency Test):** A test of fundamental Redis knowledge, including data structures, replication, and performance validation.
 2.  **Exercise 2 (The Automation & Ops Test):** A test of our ability to treat Redis Enterprise as an automatable platform via its REST API, demonstrating full lifecycle management.
 3.  **Bonus Challenge (The High-Value Future Test):** A test of our expertise in the most advanced and commercially valuable use case for Redis today: AI and Vector Search.
 
 ---
-
-## Our Arsenal: A Professional-Grade Solution
 
 Our submission consists of the following key components:
 
@@ -40,7 +37,7 @@ Our submission consists of the following key components:
 
 ---
 
-## Validation: A Comprehensive Fulfillment of All Requirements
+## Validation
 
 Our solution is designed to provide clear, verifiable evidence that every requirement of the technical challenge has been met and exceeded. Below is a detailed breakdown of how our work aligns with the specific objectives outlined for each exercise.
 
@@ -146,15 +143,13 @@ Teardown complete.
   - Worked around broken `/v1/users?email=` by fetching all users and filtering locally.
   - Resolved role assignment by mapping names to `role_uids`; when roles are constrained (only `Admin` present), substituted available role UID with audit logs.
 
-### Principles of Excellence
+### Design Notes
 
-Beyond meeting the base requirements, our solution demonstrates a higher level of strategic thinking and professional discipline.
+- **Security:** All configuration (hosts, ports, passwords, API keys) is loaded from `.env`. The API client supports custom CA bundles and toggling TLS verification for lab environments.
 
-*   **Security Mindset:** Security is a core principle. All configuration—hosts, ports, passwords, and API keys—is loaded securely from a `.env` file, which is explicitly ignored by source control. Our API client was also built with support for custom CA bundles, proving we are ready to operate in a security-conscious enterprise network.
+- **Automation:** `RedisEnterpriseAPI` (`src/common/api_client.py`) centralizes REST calls with retries and structured JSON logs. `exercise_2.py` is idempotent (safe to re-run).
 
-*   **Automation Strategy:** For Exercise 2, we built a robust, reusable `RedisEnterpriseAPI` client (`src/common/api_client.py`), demonstrating a professional software engineering mindset. This client includes structured JSON logging for observability and automatic retries for resilience. The `exercise_2.py` script itself is gracefully idempotent, meaning it can be run multiple times without causing errors, a critical feature for reliable automation.
-
-*   **Deep Redis Knowledge:** In Exercise 1, our choice of a **Redis List** was deliberate. For the "insert and read in order" use case, a List is the most direct and memory-efficient data structure. Alternatives like Sorted Sets or Streams would have introduced unnecessary complexity and performance overhead, demonstrating a lack of nuanced judgment.
+- **Data structures:** For Exercise 1, a Redis List fits the "insert then read in order" requirement with minimal complexity and good performance.
 
 ### Performance Validation
 
