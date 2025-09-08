@@ -1,0 +1,32 @@
+---
+globs: *.py
+---
+### Python Implementation Standards
+
+- **Configuration**:
+  - Load endpoints and credentials from env: `REDIS_HOST`, `REDIS_PORT`, `REDIS_USER`, `REDIS_PASSWORD`, `RE_API_HOST`, `RE_API_USER`, `RE_API_PASSWORD`, `VERIFY_TLS`.
+  - Provide sane defaults only for local testing; never hard-code secrets.
+
+- **Structure**:
+  - Use a dedicated client class for REST API (session reuse, auth headers, error handling).
+  - Use context‑specific functions for Exercise 1 (data load/read) and Bonus (router).
+  - Keep scripts executable via `python script.py` with `if __name__ == "__main__"`.
+
+- **Reliability**:
+  - Validate all API responses and raise on non‑2xx.
+  - Use retries with backoff for transient network errors.
+  - Prefer pipelines/transactions for Redis batch ops.
+
+- **Logging & Output**:
+  - Use `logging` with INFO for steps and DEBUG for details; avoid print except final outputs required by spec.
+  - Make machine‑parsable outputs when listing users (exact format: name, role, email).
+
+- **Validation-first outputs**:
+  - Exercise 1: After inserts, confirm count and print replica-sourced reverse order.
+  - Exercise 2: Print created DB ID, user list in `name, role, email`, and deletion confirmation.
+  - Bonus: Print only the selected route name; suppress intermediary details to logs.
+
+- **DX**:
+  - Type hints for all public functions; run `ruff`/`flake8` if available.
+  - Keep functions short and names descriptive; avoid global state.
+

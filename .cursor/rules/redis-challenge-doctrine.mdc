@@ -1,0 +1,33 @@
+---
+alwaysApply: true
+---
+### Strategic Doctrine: Win the Engagement, Not Just the Tasks
+
+- **Mission**: Project overwhelming competence across operations, security, and AI. Code is necessary, proof is mandatory.
+
+- **Narrative-first framing**:
+  - Exercise 1 proves deep Redis fundamentals and data-structure judgement.
+  - Exercise 2 proves platform automation and lifecycle control via API.
+  - Bonus proves forward-looking AI capability (semantic routing with vector search).
+
+- **Validation artifacts (non-negotiable)**:
+  - `README.md` is an evidence deck, not a how-to. Include rationale, trade-offs, and outcomes.
+  - Save the exact `memtier-benchmark` command to `/tmp/memtier_benchmark.txt` on the load node.
+  - Scripts must emit concise, verifiable outputs:
+    - Exercise 1: print reverse-ordered values from replica and note replication source.
+    - Exercise 2: print users in `name, role, email` and emit DB lifecycle IDs.
+    - Bonus: print only the selected route name.
+  - All configuration via environment variables to demonstrate security posture.
+
+- **Strategic execution rules**:
+  - Prefer Lists for ordered ingestion; document alternatives (Sorted Sets, Streams) and why.
+  - Implement a reusable API client to exemplify engineering discipline (retries, TLS toggle, auth handling).
+  - Use embeddings + nearest centroid (e.g., RedisVL) for routing; document why this is production-reasonable.
+
+- **Quality bar (consultant-grade)**:
+  - Security: zero hard-coded secrets; TLS verify controllable with custom CA bundle support; principle of least privilege.
+  - Automation: Gracefully idempotent scripts (verify, then confirm success if resources exist); deterministic outputs for validation; clean teardown.
+  - Observability: Structured JSON logging for all critical actions; explicit error codes; clear success criteria in outputs.
+  - Reproducibility: exact commands, inputs, and assumptions recorded in `README.md`. Include a "Performance Validation" table with `memtier-benchmark` results (ops/sec, p99 latency).
+
+

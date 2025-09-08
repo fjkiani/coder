@@ -1,0 +1,12 @@
+# 
+
+memtier_benchmark -p 14092 -c 100 -t 50 -d 3200 &
+
+memtier_benchmark -p 14093 -c 100 -t 50 -d 3200 &
+
+curl -X POST -H 'cache-control: no-cache' -H 'Content-type: application/json' -u admin@rl.org:admin -d '{ "name": "test-db", "memory_size": 100000000, "shards_placement": "dense", "port": 14092 }' -k https://re-n1:9443/v1/bdbs
+
+curl -X POST -H 'cache-control: no-cache' -H 'Content-type: application/json' -u admin@rl.org:admin -d '{ "name": "test-db-2", "memory_size": 100000000, "shards_placement": "dense", "port": 14093 }' -k https://re-n1:9443/v1/bdbs
+
+ccs-cli hset cluster_settings metrics_exporter_expose_bdb_name enabled
+supervisorctl restart metrics_exporter

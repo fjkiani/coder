@@ -1,0 +1,7 @@
+requests
+prometheus_client
+git+https://gitlab.com/deji.alaran/admin.git
+log4p
+apscheduler
+pytest
+pytest-mock
