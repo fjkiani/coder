@@ -120,13 +120,39 @@ Teardown complete.
 
 - This environment exposes only the `Admin` role via `/v1/roles`. Our client resolves role names to `role_uids`. When a requested role (e.g., `db_viewer`, `db_member`) is not available, it substitutes the available role UID, logging the substitution for auditability. This preserves idempotent behavior while adapting to constrained lab roles.
 
-### Overarching Principles of Excellence
+### Security and TLS Handling (Edge Cases & Resolutions)
+
+- Configuration flags:
+  - `USE_SSL` controls whether Redis connections use TLS (databases and bonus). Set to `false` for plaintext endpoints.
+  - `VERIFY_TLS` controls certificate verification for the REST API. Set to `false` to allow self-signed certs; prefer `CUSTOM_CA_BUNDLE_PATH` when available.
+  - `CUSTOM_CA_BUNDLE_PATH` enables strict verification with a provided CA bundle.
+
+- REST API client (`src/common/api_client.py`):
+  - Uses `requests.Session` with retries; mounts `https://` and `http://` adapters.
+  - The `verify` parameter is driven by `VERIFY_TLS` or a CA bundle path and is logged at init.
+
+- Redis DB connections:
+  - Non-TLS DBs triggered `[SSL: WRONG_VERSION_NUMBER]` when TLS was forced → resolution: `USE_SSL=false`.
+  - Self-signed certs caused `CERTIFICATE_VERIFY_FAILED` on API → resolution: `VERIFY_TLS=false` in lab or use `CUSTOM_CA_BUNDLE_PATH`.
+  - DNS instability → use IPs directly when hostnames fail.
+
+- Bonus (vector search):
+  - `decode_responses=False` for binary vectors; raw `FT.CREATE/FT.SEARCH` for RediSearch v2.
+  - For self-signed TLS on DB, we set `ssl_cert_reqs=None` when `USE_SSL=true` in lab.
+
+- Additional robustness fixes:
+  - Removed deprecated `allowed_methods` from urllib3 Retry for older environments.
+  - Normalized `uid` vs `id` in API responses.
+  - Worked around broken `/v1/users?email=` by fetching all users and filtering locally.
+  - Resolved role assignment by mapping names to `role_uids`; when roles are constrained (only `Admin` present), substituted available role UID with audit logs.
+
+### Principles of Excellence
 
 Beyond meeting the base requirements, our solution demonstrates a higher level of strategic thinking and professional discipline.
 
-*   **Professionalism & Security Mindset:** Security is a core principle. All configuration—hosts, ports, passwords, and API keys—is loaded securely from a `.env` file, which is explicitly ignored by source control. Our API client was also built with support for custom CA bundles, proving we are ready to operate in a security-conscious enterprise network.
+*   **Security Mindset:** Security is a core principle. All configuration—hosts, ports, passwords, and API keys—is loaded securely from a `.env` file, which is explicitly ignored by source control. Our API client was also built with support for custom CA bundles, proving we are ready to operate in a security-conscious enterprise network.
 
-*   **Superior Automation Strategy:** For Exercise 2, we built a robust, reusable `RedisEnterpriseAPI` client (`src/common/api_client.py`), demonstrating a professional software engineering mindset. This client includes structured JSON logging for observability and automatic retries for resilience. The `exercise_2.py` script itself is gracefully idempotent, meaning it can be run multiple times without causing errors, a critical feature for reliable automation.
+*   **Automation Strategy:** For Exercise 2, we built a robust, reusable `RedisEnterpriseAPI` client (`src/common/api_client.py`), demonstrating a professional software engineering mindset. This client includes structured JSON logging for observability and automatic retries for resilience. The `exercise_2.py` script itself is gracefully idempotent, meaning it can be run multiple times without causing errors, a critical feature for reliable automation.
 
 *   **Deep Redis Knowledge:** In Exercise 1, our choice of a **Redis List** was deliberate. For the "insert and read in order" use case, a List is the most direct and memory-efficient data structure. Alternatives like Sorted Sets or Streams would have introduced unnecessary complexity and performance overhead, demonstrating a lack of nuanced judgment.
 
