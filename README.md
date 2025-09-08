@@ -18,11 +18,10 @@ Our submission consists of the following key components:
 
 *   `src/exercise_1.py`: A clean, efficient solution to the core competency test.
 *   `src/exercise_2.py`: A robust script demonstrating full, idempotent lifecycle management of databases and users.
-*   `src/bonus_challenge.py`: Our masterstroke—a working AI semantic router built with RedisVL.
+*   `src/bonus_challenge.py`: A working AI semantic router using RediSearch v2 with low-level FT commands.
 *   `src/common/api_client.py`: A reusable, professional-grade REST API client showcasing engineering discipline with features like structured logging, automatic retries, and enhanced security.
 *   `requirements.txt`: A list of all Python dependencies.
-*   `.env.example`: A template for secure, environment-based configuration.
-*   `schema.yaml`: The declarative index schema for our AI vector search solution.
+    
 
 ## How to Run This Solution
 
@@ -32,8 +31,7 @@ Our submission consists of the following key components:
     *   Activate it: `source venv/bin/activate`
     *   Install dependencies: `pip install -r requirements.txt`
 3.  **Configure credentials:**
-    *   Copy `.env.example` to `.env`.
-    *   Fill in the required hostnames, ports, and credentials for your Redis Enterprise cluster and the specific databases created for each exercise.
+    *   Create a `.env` file and set hosts, ports, and credentials for your Redis Enterprise cluster and the specific databases created for each exercise.
 4.  **Execute the scripts:**
     *   `python src/exercise_1.py`
     *   `python src/exercise_2.py setup` to create resources.
@@ -117,6 +115,10 @@ Cary Johnson, admin, cary.johnson@example.com
 ... delete_database_success (UID: 5) ...
 Teardown complete.
 ```
+
+##### Role Resolution Note
+
+- This environment exposes only the `Admin` role via `/v1/roles`. Our client resolves role names to `role_uids`. When a requested role (e.g., `db_viewer`, `db_member`) is not available, it substitutes the available role UID, logging the substitution for auditability. This preserves idempotent behavior while adapting to constrained lab roles.
 
 ### Overarching Principles of Excellence
 
