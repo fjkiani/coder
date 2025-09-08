@@ -204,36 +204,30 @@ class RedisEnterpriseAPI:
             "password": password,
         }
 
-        # Prefer role_uids if we can resolve the role name; fall back to 'role'
+        # This API version requires role_uids. We must resolve the role name to its UID.
         try:
             roles = self._request("GET", "roles") or []
-            resolved = next((r for r in roles if r.get("name") == role), None)
-            if resolved and resolved.get("uid") is not None:
+            # Robust matching: case-insensitive and stripped of whitespace.
+            norm_role = role.strip().lower()
+            resolved = next((r for r in roles if r.get("name", "").strip().lower() == norm_role), None)
+
+            if resolved and 'uid' in resolved:
                 payload["role_uids"] = [resolved["uid"]]
-                logger.info({
-                    "event": "create_user_resolved_role_uid",
-                    "email": email,
-                    "role": role,
-                    "role_uid": resolved["uid"],
-                })
+                logger.info({"event": "role_resolved_to_uid", "role": role, "uid": resolved["uid"]})
             else:
-                payload["role"] = role
-                logger.info({
-                    "event": "create_user_fallback_role_string",
-                    "email": email,
-                    "role": role,
-                })
+                # If we cannot resolve the role, fail explicitly with a rich error message.
+                available_roles = [r.get("name") for r in roles if r.get("name")]
+                error_msg = f"Failed to resolve role '{role}'. Available roles on server: {available_roles}"
+                logger.error({"event": "role_resolution_failed", "requested_role": role, "available_roles": available_roles})
+                raise ValueError(error_msg)
+
         except Exception as e:
-            payload["role"] = role
-            logger.info({
-                "event": "create_user_roles_fetch_failed",
-                "email": email,
-                "role": role,
-                "error": str(e),
-            })
+            logger.error({"event": "create_user_failed_during_role_lookup", "error": str(e)})
+            # Re-raise to halt execution; proceeding would fail anyway.
+            raise
 
         response = self._request("POST", "users", payload=payload)
-        logger.info({"event": "create_user_success", "email": email, "response": response})
+        logger.info({"event": "create_user_success", "email": email, "user_id": response.get('uid')})
         return response
 
     def delete_user(self, user_id):
