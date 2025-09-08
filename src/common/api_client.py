@@ -183,6 +183,10 @@ class RedisEnterpriseAPI:
         # API returns a list, so we check if it's non-empty.
         users = self._request("GET", f"users?email={email}")
         if users and len(users) > 0:
+            # --- Reconnaissance Code ---
+            # We dump the raw user object to the logs to inspect its structure.
+            logger.info({"event": "raw_user_object_recon", "user_object": users[0]})
+            # --- End Reconnaissance Code ---
             logger.info({"event": "user_found", "email": email, "user_id": users[0]['id']})
             return users[0]
         logger.info({"event": "user_not_found", "email": email})
