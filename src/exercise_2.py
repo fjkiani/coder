@@ -77,8 +77,9 @@ def teardown_resources(api: RedisEnterpriseAPI):
     for user_def in USERS:
         user = api.get_user(user_def["email"])
         if user:
-            user_id = user.get('id')
-            logger.info(f"Deleting user '{user_def['email']}' (ID: {user_id}).")
+            # Use direct key access for clarity and immediate failure if key is missing.
+            user_id = user['uid']
+            logger.info(f"Deleting user '{user_def['email']}' (UID: {user_id}).")
             api.delete_user(user_id)
             print(f"- User '{user_def['email']}' deleted.")
         else:
@@ -88,8 +89,9 @@ def teardown_resources(api: RedisEnterpriseAPI):
     # Delete the database
     db = api.get_database(DB_NAME)
     if db:
-        db_id = db.get('uid')
-        logger.info(f"Deleting database '{DB_NAME}' (ID: {db_id}).")
+        # Use direct key access here as well for consistency.
+        db_id = db['uid']
+        logger.info(f"Deleting database '{DB_NAME}' (UID: {db_id}).")
         api.delete_database(db_id)
         print(f"- Database '{DB_NAME}' deleted.")
     else:
