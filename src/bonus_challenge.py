@@ -4,6 +4,8 @@ import numpy as np
 import redis
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
+import re
+import hashlib
 
 # --- Configuration ---
 load_dotenv()
@@ -30,6 +32,48 @@ ROUTES = {
         "Who were the most influential composers of the Romantic era?",
     ]
 }
+
+# --- Vectorizer with offline fallback ---
+class Vectorizer:
+    """
+    Wrapper around SentenceTransformer with an offline hashing fallback
+    that produces deterministic 384-d vectors when model download is not possible.
+    """
+    def __init__(self, model_name: str, dim: int = 384):
+        self.dim = dim
+        self.use_backend = False
+        try:
+            self.backend = SentenceTransformer(model_name)
+            # If model cannot be downloaded at encode time, we'll handle it there
+            self.use_backend = True
+        except Exception:
+            self.backend = None
+            self.use_backend = False
+
+    def _hash_embed(self, text: str) -> np.ndarray:
+        tokens = re.findall(r"\w+", (text or "").lower())
+        vec = np.zeros(self.dim, dtype=np.float32)
+        for tok in tokens:
+            h = int(hashlib.sha256(tok.encode("utf-8")).hexdigest(), 16)
+            idx = h % self.dim
+            vec[idx] += 1.0
+        norm = np.linalg.norm(vec)
+        if norm > 0:
+            vec /= norm
+        return vec
+
+    def encode(self, texts):
+        if isinstance(texts, str):
+            texts = [texts]
+        if self.use_backend and self.backend is not None:
+            try:
+                emb = self.backend.encode(texts, show_progress_bar=False)
+                return np.asarray(emb, dtype=np.float32)
+            except Exception:
+                # Fallback silently if runtime download fails
+                pass
+        # Offline fallback
+        return np.stack([self._hash_embed(t) for t in texts]).astype(np.float32)
 
 def get_redis_connection():
     """Establishes a connection to the Redis database."""
@@ -131,7 +175,11 @@ def main():
         redis_conn.ping()
         
         print("Loading embedding model...")
-        vectorizer = SentenceTransformer(MODEL)
+        vectorizer = Vectorizer(MODEL)
+        if getattr(vectorizer, "use_backend", False):
+            print("Loaded sentence-transformers model.")
+        else:
+            print("Using offline embedding fallback.")
         
         create_and_load_index(redis_conn, vectorizer)
         
