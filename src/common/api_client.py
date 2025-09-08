@@ -77,8 +77,8 @@ class RedisEnterpriseAPI:
         retries = Retry(
             total=5,
             backoff_factor=1,
-            status_forcelist=[500, 502, 503, 504], # Retry on server-side errors
-            allowed_methods=False # Setting this to False retries on all methods
+            status_forcelist=[500, 502, 503, 504] # Retry on server-side errors
+            # NOTE: Removed 'allowed_methods' for compatibility with older urllib3 versions
         )
         adapter = HTTPAdapter(max_retries=retries)
         session.mount("https://", adapter)
