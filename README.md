@@ -62,6 +62,26 @@ The objectives for this exercise centered on fundamental Redis operations, data 
 
 *   **Data Structure Rationale Documentation:** The choice of the Redis List data structure was a deliberate one. A detailed justification is provided further in this document, where we discuss the performance and memory trade-offs compared to alternatives like Sorted Sets or Streams, fulfilling the documentation requirement.
 
+#### Latest Validation (Exercise 1)
+
+- Environment endpoints used:
+  - Source: `172.16.22.21:17159`
+  - Replica: `172.16.22.23:13383`
+- Script output confirms replication and reverse-order read:
+
+```text
+--- Exercise 1 Validation Output ---
+Reading from replica-db at: 172.16.22.23:13383
+Replica reports source at: 172.16.22.21:17159
+Values in reverse order:
+- 100
+- 99
+- 98
+...
+- 2
+- 1
+```
+
 ### Exercise 2: Working with the Redis REST API
 
 The objectives for this exercise tested our ability to programmatically manage the Redis Enterprise cluster via its REST API.
