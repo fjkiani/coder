@@ -12,6 +12,7 @@ REDIS_HOST = os.getenv("BONUS_DB_HOST", "localhost")
 REDIS_PORT = int(os.getenv("BONUS_DB_PORT", 12000))
 REDIS_PASSWORD = os.getenv("BONUS_DB_PASSWORD", None)
 VERIFY_TLS = os.getenv("VERIFY_TLS", "true").lower() == "true"
+USE_SSL = os.getenv("USE_SSL", "true").lower() == "true"
 
 INDEX_NAME = "semantic-router-index"
 
@@ -49,9 +50,11 @@ def get_redis_connection():
     """Establishes a connection to the Redis database."""
     redis_kwargs = {
         "decode_responses": False, # Must be False for redisvl
-        "ssl": True,
-        "ssl_cert_reqs": "required" if VERIFY_TLS else None
     }
+    if USE_SSL:
+        redis_kwargs["ssl"] = True
+        redis_kwargs["ssl_cert_reqs"] = "required" if VERIFY_TLS else None
+
     if REDIS_PASSWORD:
         redis_kwargs["password"] = REDIS_PASSWORD
     return redis.Redis(host=REDIS_HOST, port=REDIS_PORT, **redis_kwargs)

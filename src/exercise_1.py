@@ -31,6 +31,8 @@ def main():
     db_password = os.getenv("EX1_DB_PASSWORD", None)
     # This flag allows us to disable TLS verification for lab environments.
     verify_tls = os.getenv("VERIFY_TLS", "true").lower() == "true"
+    # This flag allows us to disable SSL entirely for non-TLS endpoints.
+    use_ssl = os.getenv("USE_SSL", "true").lower() == "true"
 
     # Data to be ingested.
     # Per the instructions, we are inserting the numbers 1-100.
@@ -42,9 +44,11 @@ def main():
         # We build a robust configuration that handles TLS verification gracefully.
         redis_kwargs = {
             "decode_responses": True,
-            "ssl": True, # Assume TLS for enterprise environments
-            "ssl_cert_reqs": "required" if verify_tls else None
         }
+        if use_ssl:
+            redis_kwargs["ssl"] = True
+            redis_kwargs["ssl_cert_reqs"] = "required" if verify_tls else None
+        
         if db_password:
             redis_kwargs["password"] = db_password
 

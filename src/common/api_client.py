@@ -78,10 +78,11 @@ class RedisEnterpriseAPI:
             total=5,
             backoff_factor=1,
             status_forcelist=[500, 502, 503, 504], # Retry on server-side errors
-            allowed_methods=["HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS"]
+            allowed_methods=False # Setting this to False retries on all methods
         )
         adapter = HTTPAdapter(max_retries=retries)
         session.mount("https://", adapter)
+        session.mount("http://", adapter) # Also mount for http for non-tls api endpoints
         return session
 
     def _request(self, method, endpoint, payload=None, params=None):
