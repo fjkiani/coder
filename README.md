@@ -69,7 +69,7 @@ Security is not an afterthought; it is a core principle.
 Exercise 2 proves we can manage a Redis Enterprise cluster at scale.
 
 *   **Reusable API Client:** We built a robust, reusable `RedisEnterpriseAPI` client, demonstrating a professional software engineering mindset. It includes structured JSON logging for observability and automatic retries for resilience.
-*   **Gracefully Idempotent:** The `exercise_2.py` script is gracefully idempotent. It can be run multiple times without causing errors, first creating resources and then confirming their existence on subsequent runs. This proves we can be trusted to operate on live, production environments without fucking them up.
+*   **Gracefully Idempotent:** The `exercise_2.py` script is gracefully idempotent. It can be run multiple times without causing errors, first creating resources and then confirming their existence on subsequent runs. This proves we can be trusted to operate on live, production environments without messing them up.
 *   **Full Lifecycle Management:** The script handles the entire lifecycle of a database and its users (setup and teardown) via code, showcasing complete automation.
 
 ### We Validated Our Forward-Thinking Expertise
