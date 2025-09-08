@@ -3,8 +3,6 @@ import sys
 import numpy as np
 import redis
 from dotenv import load_dotenv
-from redis.commands.search.field import VectorField, TextField
-from redis.commands.search.query import Query
 from sentence_transformers import SentenceTransformer
 
 # --- Configuration ---
@@ -35,7 +33,8 @@ ROUTES = {
 
 def get_redis_connection():
     """Establishes a connection to the Redis database."""
-    redis_kwargs = {"decode_responses": True}
+    # Use decode_responses=False because vectors are stored/retrieved as bytes
+    redis_kwargs = {"decode_responses": False}
     if USE_SSL:
         redis_kwargs["ssl"] = True
         redis_kwargs["ssl_cert_reqs"] = None
@@ -48,20 +47,26 @@ def create_and_load_index(redis_conn, vectorizer):
     Creates a RediSearch index and loads it with the route centroids.
     This demonstrates our core AI/Vector Search competency using low-level commands.
     """
-    schema = (
-        TextField("name"),
-        VectorField("vector", "FLAT", {
-            "TYPE": "FLOAT32",
-            "DIM": 384,
-            "DISTANCE_METRIC": "COSINE"
-        })
-    )
     try:
-        redis_conn.ft(INDEX_NAME).info()
+        # If FT.INFO succeeds, the index exists
+        redis_conn.execute_command("FT.INFO", INDEX_NAME)
         print("Index already exists. Skipping creation and loading.")
     except redis.exceptions.ResponseError:
         print("Creating new search index...")
-        redis_conn.ft(INDEX_NAME).create_index(fields=schema)
+        # Create index with raw RediSearch command to ensure compatibility with redis-py 4.1.0
+        # FT.CREATE semantic-router-index ON HASH PREFIX 1 route: SCHEMA name TEXT vector VECTOR FLAT 6 TYPE FLOAT32 DIM 384 DISTANCE_METRIC COSINE
+        redis_conn.execute_command(
+            "FT.CREATE",
+            INDEX_NAME,
+            "ON", "HASH",
+            "PREFIX", 1, "route:",
+            "SCHEMA",
+            "name", "TEXT",
+            "vector", "VECTOR", "FLAT", 6,
+            "TYPE", "FLOAT32",
+            "DIM", 384,
+            "DISTANCE_METRIC", "COSINE",
+        )
 
         print("Calculating and loading route centroids...")
         for name, examples in ROUTES.items():
@@ -80,20 +85,40 @@ def route_query(redis_conn, vectorizer, user_query: str) -> str:
     """
     query_embedding = vectorizer.encode(user_query).astype(np.float32)
 
-    # This is a raw K-Nearest Neighbor (KNN) query against the index.
-    # It demonstrates a deep understanding of how RediSearch works under the hood.
-    q = Query("*=>[KNN 1 @vector $query_vec as score]")\
-        .sort_by("score")\
-        .return_fields("name", "score")\
-        .dialect(2)
-
-    query_params = {"query_vec": query_embedding.tobytes()}
-    results = redis_conn.ft(INDEX_NAME).search(q, query_params)
-    
-    if not results.docs:
+    # Perform raw FT.SEARCH with KNN to ensure compatibility across client versions
+    # FT.SEARCH index "*=>[KNN 1 @vector $query_vec AS score]" PARAMS 2 query_vec <bytes> SORTBY score RETURN 2 name score DIALECT 2
+    try:
+        raw = redis_conn.execute_command(
+            "FT.SEARCH",
+            INDEX_NAME,
+            "*=>[KNN 1 @vector $query_vec AS score]",
+            "PARAMS", 2, "query_vec", query_embedding.tobytes(),
+            "SORTBY", "score",
+            "RETURN", 2, "name", "score",
+            "DIALECT", 2,
+        )
+    except redis.exceptions.ResponseError:
         return "No matching route found."
-    
-    return results.docs[0].name
+
+    # raw format: [total, doc_id, [field, value, ...], ...]
+    if not raw or raw[0] == 0:
+        return "No matching route found."
+
+    fields = raw[2] if len(raw) >= 3 else None
+    if not isinstance(fields, (list, tuple)):
+        return "No matching route found."
+
+    route_name = None
+    for i in range(0, len(fields), 2):
+        key = fields[i]
+        val = fields[i + 1] if i + 1 < len(fields) else None
+        if key == b"name" or key == "name":
+            route_name = val
+            break
+
+    if isinstance(route_name, bytes):
+        route_name = route_name.decode("utf-8", errors="ignore")
+    return route_name or "No matching route found."
 
 def main():
     if len(sys.argv) != 2:
