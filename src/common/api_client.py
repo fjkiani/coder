@@ -157,9 +157,8 @@ class RedisEnterpriseAPI:
             "type": "redis",
             "replication": True,
             "sharding": False,
-            "authentication_redis_pass": password,
-            # We explicitly set the port to ensure predictable connection endpoints.
-            "port": 12000
+            "authentication_redis_pass": password
+            # NOTE: Removed hard-coded port. Let the cluster assign it dynamically.
         }
         response = self._request("POST", "bdbs", payload=payload)
         logger.info({"event": "create_database_success", "db_name": name, "response": response})
