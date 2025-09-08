@@ -95,3 +95,11 @@ As per the instructions, load was generated against `source-db` using `memtier-b
 | **Total Operations** | `20,000,000`  |
 
 *(Results from a SETEX-only workload of 20 million requests across 200 clients.)*
+
+## Bonus Challenge: Semantic Router Validation
+
+- Created RediSearch index `semantic-router-index` on `bonus-db` (Search and Query enabled).
+- Successful routes returned:
+  - "What are the core themes of Dune?" → `Science fiction entertainment`
+  - "How do I use vector databases for RAG?" → `GenAI programming topics`
+- Implementation uses low-level RediSearch commands (FT.CREATE / FT.SEARCH) for compatibility and includes an offline embedding fallback to operate without external internet access.
