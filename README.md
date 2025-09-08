@@ -94,6 +94,21 @@ The objectives for this exercise tested our ability to programmatically manage t
 
 *   **Database Deletion via API:** The solution provides a `teardown` command (`exercise_2.py teardown`) which orchestrates the cleanup of all created resources. It first deletes the users and then sends a `DELETE` request to the `/v1/bdbs/{db_id}` endpoint to remove the database, demonstrating full, clean lifecycle management.
 
+#### Latest Validation (Exercise 2)
+
+- API endpoint: `https://re-cluster1.ps-redislabs.org:9443/v1` (VERIFY_TLS=false)
+- Database state: `exercise-2-db` exists (UID: `5`)
+- Users created via API (role resolution/substitution applied due to environment roles):
+
+```text
+John Doe, admin, john.doe@example.com
+Mike Smith, admin, mike.smith@example.com
+Cary Johnson, admin, cary.johnson@example.com
+```
+
+- Notes:
+  - The environment exposes only the `Admin` role via `/v1/roles`. Our client resolves role names to `role_uids` and, when a requested role is unavailable, substitutes the available role UID with structured logging for auditability.
+
 ### Overarching Principles of Excellence
 
 Beyond meeting the base requirements, our solution demonstrates a higher level of strategic thinking and professional discipline.
