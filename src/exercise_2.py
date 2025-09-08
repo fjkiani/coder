@@ -59,11 +59,16 @@ def manage_users(api: RedisEnterpriseAPI):
             logger.info(f"SUCCESS: Created user '{user_def['email']}'.")
             print(f"- User '{user_def['email']}' created.")
 
-    print("\n--- User Validation Output ---")
+    # Fulfills the "List and Display Users" requirement by fetching from the API.
+    print("\n--- User Validation Output (from API) ---")
     print("name, role, email")
-    for user_def in USERS:
-        print(f"{user_def['name']}, {user_def['role']}, {user_def['email']}")
-    print("----------------------------")
+    all_users = api._request("GET", "users")
+    if all_users:
+        for user in all_users:
+            # We only print the users relevant to this exercise
+            if user['email'] in [u['email'] for u in USERS]:
+                print(f"{user['name']}, {user['role']}, {user['email']}")
+    print("---------------------------------------")
 
 
 def teardown_resources(api: RedisEnterpriseAPI):
