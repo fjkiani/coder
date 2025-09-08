@@ -202,8 +202,36 @@ class RedisEnterpriseAPI:
             "name": name,
             "email": email,
             "password": password,
-            "role": role
         }
+
+        # Prefer role_uids if we can resolve the role name; fall back to 'role'
+        try:
+            roles = self._request("GET", "roles") or []
+            resolved = next((r for r in roles if r.get("name") == role), None)
+            if resolved and resolved.get("uid") is not None:
+                payload["role_uids"] = [resolved["uid"]]
+                logger.info({
+                    "event": "create_user_resolved_role_uid",
+                    "email": email,
+                    "role": role,
+                    "role_uid": resolved["uid"],
+                })
+            else:
+                payload["role"] = role
+                logger.info({
+                    "event": "create_user_fallback_role_string",
+                    "email": email,
+                    "role": role,
+                })
+        except Exception as e:
+            payload["role"] = role
+            logger.info({
+                "event": "create_user_roles_fetch_failed",
+                "email": email,
+                "role": role,
+                "error": str(e),
+            })
+
         response = self._request("POST", "users", payload=payload)
         logger.info({"event": "create_user_success", "email": email, "response": response})
         return response
